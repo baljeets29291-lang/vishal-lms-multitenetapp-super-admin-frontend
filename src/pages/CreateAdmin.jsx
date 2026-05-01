@@ -27,13 +27,32 @@ const CreateAdmin = () => {
     const fetchOrgs = async () => {
       try {
         const data = await getOrganizations();
-        setOrganizations(data);
+
+        // Ensure data is always an array - matching ViewOrganization logic
+        let organizationsArray = [];
+        if (Array.isArray(data)) {
+          organizationsArray = data;
+        } else if (data && typeof data === 'object') {
+          if (Array.isArray(data.data)) {
+            organizationsArray = data.data;
+          } else if (Array.isArray(data.organizations)) {
+            organizationsArray = data.organizations;
+          } else if (data.id || data.name) {
+            organizationsArray = [data];
+          } else {
+            organizationsArray = [];
+          }
+        }
+
+        setOrganizations(organizationsArray);
+
         // Set first organization as default if available
-        if (data.length > 0) {
-          setForm((prev) => ({ ...prev, organizationId: data[0].id }));
+        if (organizationsArray.length > 0) {
+          setForm((prev) => ({ ...prev, organizationId: organizationsArray[0].id }));
         }
       } catch (error) {
         console.error("Error fetching organizations:", error);
+        setOrganizations([]);
       } finally {
         setFetchingOrgs(false);
       }
