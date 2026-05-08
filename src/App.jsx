@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./auth/Login";
 import HomeLayout from "./layout/HomeLayout";
 import HomePage from "./pages/HomePage";
+import Profile from "./pages/Profile";
 import ProtectRoutes from "./auth/ProtectRoutes";
 import CreateOrganization from "./pages/CreateOrganization";
 import ViewOrganization from "./pages/ViewOrganization";
@@ -23,6 +24,7 @@ const App = () => {
 
           {/* Dashboard */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/profile" element={<Profile />} />
 
           {/* Organization Routes */}
           <Route path="/create-org" element={<CreateOrganization />} />

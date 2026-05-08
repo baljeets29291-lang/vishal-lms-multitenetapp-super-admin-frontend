@@ -1,5 +1,6 @@
 import axios from "axios";
 import { toast } from "react-toastify";
+import { createUser } from "./userApi";
 
 const API_URL = import.meta.env.VITE_BACKEND_API;
 const getAuthHeaders = () => {
@@ -84,20 +85,59 @@ export const toggleOrganizationStatus = async (id, currentStatus) => {
   }
 };
 
+// Create superadmin for organization
+export const createSuperAdminForOrganization = async (organizationData, adminData) => {
+  try {
+    // Create organization first
+    const orgResponse = await createOrganization(organizationData);
+    const organizationId = orgResponse.data?.id || orgResponse.id;
+
+    if (!organizationId) {
+      throw new Error('Organization ID not found in response');
+    }
+
+    // Create superadmin for the organization
+    const superAdminData = {
+      ...adminData,
+      organizationId: organizationId,
+      role: 'superadmin',
+      status: true
+    };
+
+    const adminResponse = await createUser(superAdminData);
+
+    toast.success('Organization and Super Admin created successfully');
+    return {
+      organization: orgResponse,
+      superAdmin: adminResponse
+    };
+  } catch (error) {
+    console.error('Error creating organization and superadmin:', error);
+    toast.error(error.response?.data?.message || 'Failed to create organization and superadmin');
+    throw error;
+  }
+};
 
 export const handleImportDataBase = async (data) => {
   console.log("Importing database for:", data);
+  console.log("API URL:", API_URL);
+  console.log("Full endpoint:", `${API_URL}/database/seed-permissions`);
 
   try {
-    const res = await axios.post(`${API_URL}/database/seed/permissions`, data, {
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
+    const res = await axios.post(`${API_URL}/database/seed-permissions`, data, getAuthHeaders());
 
+    console.log("Database import response:", res.data);
+
+    // Show success message
+    toast.success("Database permissions imported successfully");
     return res.data;
   } catch (error) {
     console.error("Error importing database:", error);
+    console.error("Error response:", error.response?.data);
+    console.error("Error status:", error.response?.status);
+
+    const errorMessage = error.response?.data?.message || error.message || "Failed to import database permissions";
+    toast.error(errorMessage);
     throw error;
   }
-}
+};

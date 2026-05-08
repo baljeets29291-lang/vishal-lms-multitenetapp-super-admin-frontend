@@ -138,26 +138,26 @@ const CreateRole = () => {
     // Fetch roles for the selected organization
     const fetchRoles = async (organizationId) => {
         if (!organizationId || organizationId === "") return;
-        
+
         setFetchingRoles(true);
         try {
             // Get the selected organization
             const selectedOrg = organizations.find(org => org.id === organizationId);
-            
+
             if (!selectedOrg) {
                 console.error("Selected organization not found");
                 return;
             }
-            
+
             // Check if organization has subdomain
             if (!selectedOrg.subdomain || selectedOrg.subdomain.trim() === "") {
                 console.warn(`Organization "${selectedOrg.name}" does not have a subdomain configured`);
                 return;
             }
-            
+
             const data = await getRoles(selectedOrg.subdomain);
             console.log("Fetched roles:", data);
-            
+
             // Handle different response formats
             let rolesArray = [];
             if (data && data.roles && Array.isArray(data.roles)) {
@@ -167,7 +167,7 @@ const CreateRole = () => {
             } else if (data && data.data && Array.isArray(data.data)) {
                 rolesArray = data.data;
             }
-            
+
             setRoles(rolesArray);
             return rolesArray;
         } catch (error) {
@@ -184,15 +184,37 @@ const CreateRole = () => {
         const fetchOrgs = async () => {
             try {
                 const data = await getOrganizations();
-                setOrganizations(data);
+
+                // Ensure data is always an array (handle different API response formats)
+                let organizationsArray = [];
+                if (Array.isArray(data)) {
+                    organizationsArray = data;
+                } else if (data && typeof data === 'object') {
+                    if (Array.isArray(data.data)) {
+                        organizationsArray = data.data;
+                    } else if (Array.isArray(data.organizations)) {
+                        organizationsArray = data.organizations;
+                    } else if (data.id || data.name) {
+                        organizationsArray = [data];
+                    } else {
+                        console.error("Unexpected API response format:", data);
+                        organizationsArray = [];
+                    }
+                } else {
+                    console.error("Invalid data received:", data);
+                    organizationsArray = [];
+                }
+
+                setOrganizations(organizationsArray);
                 // Set first organization as default if available
-                if (data && data.length > 0) {
-                    setForm((prev) => ({ ...prev, organizationId: data[0].id }));
+                if (organizationsArray && organizationsArray.length > 0) {
+                    setForm((prev) => ({ ...prev, organizationId: organizationsArray[0].id }));
                     // Fetch roles for the default organization
-                    await fetchRoles(data[0].id);
+                    await fetchRoles(organizationsArray[0].id);
                 }
             } catch (error) {
                 console.error("Error fetching organizations:", error);
+                setOrganizations([]);
             } finally {
                 setFetchingOrgs(false);
             }
@@ -303,9 +325,9 @@ const CreateRole = () => {
                 // Show success message with role count
                 const updatedRoles = await fetchRoles(form.organizationId);
                 const roleCount = updatedRoles ? updatedRoles.length : roles.length + 1;
-                
+
                 alert(`✅ Role "${form.name}" created successfully!\n\nYou now have ${roleCount} role${roleCount !== 1 ? 's' : ''} in ${selectedOrg.name}.`);
-                
+
                 // Reset form
                 setForm({
                     name: "",
@@ -313,7 +335,7 @@ const CreateRole = () => {
                     organizationId: form.organizationId,
                 });
                 setSelectedPermissions([]);
-                
+
                 // Optional: Navigate back after 2 seconds
                 setTimeout(() => {
                     navigate("/organizations");
@@ -333,11 +355,11 @@ const CreateRole = () => {
             alert("Please select an organization first");
             return;
         }
-        
+
         setShowRoleCount(true);
         const fetchedRoles = await fetchRoles(form.organizationId);
         const selectedOrg = organizations.find(org => org.id === form.organizationId);
-        
+
         setTimeout(() => {
             setShowRoleCount(false);
         }, 5000);
@@ -366,7 +388,7 @@ const CreateRole = () => {
                             </p>
                         </div>
                     </div>
-                    
+
                     {/* Show Roles Button */}
                     <button
                         type="button"
@@ -400,7 +422,7 @@ const CreateRole = () => {
                                         Role{roles.length !== 1 ? 's' : ''} in {organizations.find(o => o.id === form.organizationId)?.name || "this organization"}
                                     </p>
                                 </div>
-                                
+
                                 {roles.length > 0 && (
                                     <div className="border-t border-gray-200 pt-4 mt-4">
                                         <p className="text-sm font-medium text-gray-700 mb-2">
@@ -418,7 +440,7 @@ const CreateRole = () => {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 <div className="flex gap-3 mt-6">
                                     <button
                                         onClick={() => setShowRoleCount(false)}
@@ -436,8 +458,8 @@ const CreateRole = () => {
             {/* Display submit error */}
             {errors.submit && (
                 <div className={`mb-6 p-4 border rounded-lg ${errors.submit.includes("Super admin cannot access")
-                        ? "bg-amber-50 border-amber-200 text-amber-800"
-                        : "bg-red-50 border-red-200 text-red-700"
+                    ? "bg-amber-50 border-amber-200 text-amber-800"
+                    : "bg-red-50 border-red-200 text-red-700"
                     }`}>
                     <div className="flex items-start gap-3">
                         <div className={`mt-0.5 ${errors.submit.includes("Super admin cannot access") ? "text-amber-600" : "text-red-600"
@@ -598,10 +620,10 @@ const CreateRole = () => {
                                                     handleSelectAllInGroup(group);
                                                 }}
                                                 className={`text-xs px-2 py-1 rounded ${allSelected
-                                                        ? 'bg-purple-100 text-purple-700'
-                                                        : someSelected
-                                                            ? 'bg-purple-50 text-purple-600'
-                                                            : 'bg-gray-100 text-gray-600'
+                                                    ? 'bg-purple-100 text-purple-700'
+                                                    : someSelected
+                                                        ? 'bg-purple-50 text-purple-600'
+                                                        : 'bg-gray-100 text-gray-600'
                                                     }`}
                                             >
                                                 {allSelected ? 'All' : someSelected ? 'Some' : 'None'}

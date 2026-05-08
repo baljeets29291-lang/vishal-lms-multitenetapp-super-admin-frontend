@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Building2,
@@ -11,13 +11,17 @@ import {
 } from "lucide-react";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear all localStorage data
+    localStorage.clear();
+
+    // Redirect to login page
+    navigate('/login');
+  };
   return (
     <div className="w-64 h-screen bg-gray-900 text-gray-200 flex flex-col shadow-xl">
-
-      {/* Logo / Title */}
-      <div className="p-6 text-2xl font-bold border-b border-gray-800">
-        LMS Panel
-      </div>
 
       {/* Menu */}
       <nav className="flex-1 p-4 space-y-2">
@@ -84,7 +88,10 @@ const Sidebar = () => {
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-800">
-        <button className="flex items-center gap-3 w-full px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white transition">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white transition"
+        >
           <LogOut size={18} />
           Logout
         </button>

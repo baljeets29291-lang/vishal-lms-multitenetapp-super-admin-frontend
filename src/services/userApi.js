@@ -103,11 +103,7 @@ export const toggleUserStatus = async (id, currentStatus) => {
 // Create role with consistent response format
 export const handleCreateRole = async (data) => {
   try {
-    const res = await axios.post(`${API_URL}/roles`, data, {
-      headers: {
-        "Content-Type": "application/json",
-      }
-    });
+    const res = await axios.post(`${API_URL}/roles`, data, getAuthHeaders());
     return res.data;
   } catch (error) {
     throw error;

@@ -23,7 +23,7 @@ const CreateOrganization = () => {
     });
   };
 
-  
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,17 +41,22 @@ const CreateOrganization = () => {
       if (form.db_name.trim()) payload.db_name = form.db_name;
       if (form.db_url.trim()) payload.db_url = form.db_url;
 
+      
       // Create organization first
       const orgResponse = await createOrganization(payload);
 
       // Wait for a brief moment before calling handleImportDataBase
       setTimeout(async () => {
         try {
-          // Use the subdomain from backend response, fallback to form subdomain if not available
           const subdomain = orgResponse?.data?.subdomain || form.subdomain;
+          console.log("Starting database import for subdomain:", subdomain);
           await handleImportDataBase({ subdomain });
+          console.log("Database import completed successfully");
         } catch (importError) {
           console.error("Error importing database:", importError);
+
+
+
         }
       }, 2000); // Wait 2 seconds before calling the import function
 

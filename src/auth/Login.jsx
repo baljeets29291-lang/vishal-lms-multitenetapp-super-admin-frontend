@@ -23,7 +23,12 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await axios.post(`${BASE_URL}/admin/normal-login`, form);
+      const res = await axios.post(`${BASE_URL}/admin/normal-login`, form, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
 
       // ✅ Save token
       localStorage.setItem("token", res.data.token);

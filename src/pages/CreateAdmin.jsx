@@ -255,9 +255,7 @@ const CreateAdmin = () => {
               ))
             )}
           </select>
-          {errors.organizationId && (
-            <p className="mt-1 text-sm text-red-500">{errors.organizationId}</p>
-          )}
+         
           {!fetchingOrgs && organizations.length === 0 && (
             <p className="mt-2 text-sm text-amber-600">
               Please create an organization first before adding admins.
@@ -265,26 +263,7 @@ const CreateAdmin = () => {
           )}
         </div>
 
-        {/* Role */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <span className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Role
-            </span>
-          </label>
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="admin">Admin</option>
-            <option value="superadmin">Super Admin</option>
-            <option value="manager">Manager</option>
-          </select>
-        </div>
-
+       
         {/* Status */}
         <div className="flex items-center gap-3">
           <input
