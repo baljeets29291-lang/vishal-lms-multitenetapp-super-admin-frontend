@@ -77,7 +77,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+        <nav className="flex-1 overflow-y-auto  p-4 space-y-6">
           {/* Main Section */}
           <div>
             <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">

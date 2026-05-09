@@ -1,904 +1,393 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  Users,
-  Search,
-  Plus,
-  CheckCircle2,
-  XCircle,
-  Calendar,
-  Clock,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  Edit2,
-  Trash2,
-  X,
-  Loader2,
-  AlertTriangle,
-  Building2,
-  Shield,
-} from "lucide-react";
-import {
-  getUsers,
-  updateUser,
-  deleteUser,
-  toggleUserStatus,
-} from "../services/userApi";
 import { getOrganizations } from "../services/organizationApi";
+import { getUsers } from "../services/userApi";
 
 const ViewAdmins = () => {
-  const [admins, setAdmins] = useState([]);
   const [organizations, setOrganizations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedOrganization, setSelectedOrganization] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [actionLoading, setActionLoading] = useState(null);
-  const itemsPerPage = 10;
+  const [selectedOrgId, setSelectedOrgId] = useState("");
+  const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingOrgs, setLoadingOrgs] = useState(true);
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
 
-  // Edit Modal State
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingAdmin, setEditingAdmin] = useState(null);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    email: "",
-    organizationId: "",
-    role: "admin",
-    status: true,
-  });
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
 
-  // Delete Modal State
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletingAdmin, setDeletingAdmin] = useState(null);
-
-  // Fetch organizations
   const fetchOrganizations = async () => {
     try {
-      const data = await getOrganizations();
-
-      // Ensure data is always an array - matching ViewOrganization logic
-      let organizationsArray = [];
-      if (Array.isArray(data)) {
-        organizationsArray = data;
-      } else if (data && typeof data === 'object') {
-        if (Array.isArray(data.data)) {
-          organizationsArray = data.data;
-        } else if (Array.isArray(data.organizations)) {
-          organizationsArray = data.organizations;
-        } else if (data.id || data.name) {
-          organizationsArray = [data];
-        } else {
-          console.error("Unexpected API response format:", data);
-          organizationsArray = [];
-        }
-      }
-
-      setOrganizations(organizationsArray);
+      setLoadingOrgs(true);
+      const response = await getOrganizations();
+      setOrganizations(response.data);
+      setError("");
     } catch (error) {
-      console.error("Error fetching organizations:", error);
-      setOrganizations([]);
+      console.log(error);
+      setError("Failed to load organizations");
+    } finally {
+      setLoadingOrgs(false);
     }
   };
 
-  // Fetch admins based on selected organization
-  const fetchAdmins = async () => {
+  const handleChange = async (e) => {
+    const orgId = e.target.value;
+    setSelectedOrgId(orgId);
+    setSearchTerm("");
+    setStatusFilter("all");
+    setRoleFilter("all");
+
+    if (!orgId) {
+      setAdmins([]);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await getUsers(selectedOrganization);
-      console.log(response, "API Response");
-
-      // Handle different response structures
-      let usersArray = [];
-
-      // Check if response has an 'admins' property (as shown in your data)
-      if (response && response.admins && Array.isArray(response.admins)) {
-        usersArray = response.admins;
-      }
-      // Check if response is directly an array
-      else if (Array.isArray(response)) {
-        usersArray = response;
-      }
-      // Check if response has a 'users' property
-      else if (response && response.users && Array.isArray(response.users)) {
-        usersArray = response.users;
-      }
-      // Check if response has a 'data' property
-      else if (response && response.data && Array.isArray(response.data)) {
-        usersArray = response.data;
-      }
-      else {
-        console.warn("Unexpected response format:", response);
-        usersArray = [];
-      }
-
-      // Map the response data to match your component's expected structure
-      // Based on your data: id, name, email, organizationId, status, roleName, roleId, etc.
-      const mappedAdmins = usersArray.map(admin => ({
-        id: admin.id,
-        name: admin.name || "",
-        email: admin.email || "",
-        organizationId: admin.organizationId || "",
-        status: admin.status === true || admin.status === "active",
-        role: admin.roleName || admin.role || "admin", // Use roleName from your data
-        roleId: admin.roleId,
-        phone: admin.phone,
-        image: admin.image,
-        createdAt: admin.createdAt,
-        updatedAt: admin.updatedAt
-      }));
-
-      // Filter only admin roles (excluding superadmin if needed)
-      // Normalize role names to handle variations like "super admin" vs "superadmin"
-      let adminUsers = mappedAdmins.filter((u) => {
-        const normalizedRole = u.role?.toLowerCase().replace(/\s+/g, '');
-        return ["admin", "superadmin", "manager", "tenant_admin"].includes(normalizedRole);
-      });
-
-      // Filter by selected organization if not "all"
-      if (selectedOrganization !== "all") {
-        adminUsers = adminUsers.filter(
-          (u) => u.organizationId === selectedOrganization
-        );
-      }
-
-      console.log("Processed admins:", adminUsers);
-      setAdmins(adminUsers);
-
+      setError("");
+      const response = await getUsers(orgId);
+      setAdmins(response.admins || response || []);
     } catch (error) {
-      console.error("Error fetching admins:", error);
+      console.log(error);
+      setError("Failed to load admins");
       setAdmins([]);
-      // Optionally show error toast/notification
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial load
-  useEffect(() => {
-    const loadData = async () => {
-      await fetchOrganizations();
-      await fetchAdmins();
-    };
-    loadData();
-  }, []);
-
-  // Fetch admins when selected organization changes
-  useEffect(() => {
-    if (organizations.length > 0 || selectedOrganization === "all") {
-      fetchAdmins();
-    }
-  }, [selectedOrganization]);
-
-  // Get organization name by ID
-  const getOrgName = (orgId) => {
-    if (!orgId) return "No Organization";
-    const org = organizations.find((o) => o.id === orgId);
-    return org ? org.name : "Unknown Organization";
+  const getStatusColor = (status) => {
+    return status === 'active'
+      ? 'bg-green-100 text-green-800'
+      : 'bg-red-100 text-red-800';
   };
 
-  // Filter admins based on search and status
-  const filteredAdmins = admins.filter((admin) => {
-    const matchesSearch =
-      admin.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      admin.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      admin.role?.toLowerCase().includes(searchQuery.toLowerCase());
+  const getRoleBadgeColor = (roleName) => {
+    switch (roleName?.toLowerCase()) {
+      case 'superadmin':
+        return 'bg-purple-100 text-purple-800';
+      case 'admin':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-    const matchesStatus =
-      filterStatus === "all"
-        ? true
-        : filterStatus === "active"
-          ? admin.status === true
-          : admin.status === false;
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
-    return matchesSearch && matchesStatus;
+  // Filter admins based on search and filters
+  const filteredAdmins = admins.filter(admin => {
+    const matchesSearch = admin.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || admin.status === statusFilter;
+    const matchesRole = roleFilter === "all" || admin.roleName === roleFilter;
+    return matchesSearch && matchesStatus && matchesRole;
   });
 
-  // Pagination
-  const totalPages = Math.ceil(filteredAdmins.length / itemsPerPage);
-  const paginatedAdmins = filteredAdmins.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterStatus, selectedOrganization]);
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch (error) {
-      return "-";
-    }
-  };
-
-  // Format time
-  const formatTime = (dateString) => {
-    if (!dateString) return "";
-    try {
-      return new Date(dateString).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch (error) {
-      return "";
-    }
-  };
-
-  // Open Edit Modal
-  const openEditModal = (admin) => {
-    setEditingAdmin(admin);
-    setEditForm({
-      name: admin.name || "",
-      email: admin.email || "",
-      organizationId: admin.organizationId || "",
-      role: admin.role || "admin",
-      status: admin.status ?? true,
-    });
-    setIsEditModalOpen(true);
-  };
-
-  // Close Edit Modal
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setEditingAdmin(null);
-    setEditForm({
-      name: "",
-      email: "",
-      organizationId: "",
-      role: "admin",
-      status: true,
-    });
-  };
-
-  // Handle Edit Form Change
-  const handleEditChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setEditForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  // Handle Update
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    if (!editingAdmin) return;
-
-    setActionLoading(editingAdmin.id);
-    try {
-      await updateUser(editingAdmin.id, editForm);
-      await fetchAdmins();
-      closeEditModal();
-    } catch (error) {
-      console.error("Error updating admin:", error);
-      alert("Failed to update admin. Please try again.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  // Open Delete Modal
-  const openDeleteModal = (admin) => {
-    setDeletingAdmin(admin);
-    setIsDeleteModalOpen(true);
-  };
-
-  // Close Delete Modal
-  const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setDeletingAdmin(null);
-  };
-
-  // Handle Delete
-  const handleDelete = async () => {
-    if (!deletingAdmin) return;
-
-    setActionLoading(deletingAdmin.id);
-    try {
-      await deleteUser(deletingAdmin.id);
-      await fetchAdmins();
-      closeDeleteModal();
-    } catch (error) {
-      console.error("Error deleting admin:", error);
-      alert("Failed to delete admin. Please try again.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  // Handle Status Toggle
-  const handleStatusToggle = async (admin) => {
-    setActionLoading(`status-${admin.id}`);
-    try {
-      // Convert status to the format expected by API
-      const newStatus = admin.status === true ? "inactive" : "active";
-      await toggleUserStatus(admin.id, admin.status);
-      await fetchAdmins();
-    } catch (error) {
-      console.error("Error toggling status:", error);
-      alert("Failed to update status. Please try again.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const getRoleBadgeColor = (role) => {
-    const roleLower = role?.toLowerCase();
-    switch (roleLower) {
-      case "superadmin":
-        return "bg-purple-100 text-purple-700";
-      case "admin":
-        return "bg-blue-100 text-blue-700";
-      case "manager":
-        return "bg-amber-100 text-amber-700";
-      case "tenant_admin":
-        return "bg-indigo-100 text-indigo-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getRoleDisplayName = (role) => {
-    const roleLower = role?.toLowerCase();
-    switch (roleLower) {
-      case "superadmin":
-        return "Super Admin";
-      case "admin":
-        return "Admin";
-      case "manager":
-        return "Manager";
-      case "tenant_admin":
-        return "Tenant Admin";
-      default:
-        return role || "Admin";
-    }
-  };
-
-  // Calculate stats
-  const totalAdmins = admins.length;
-  const activeAdmins = admins.filter((a) => a.status === true).length;
-  const inactiveAdmins = admins.filter((a) => a.status === false).length;
-  const superAdmins = admins.filter((a) => a.role?.toLowerCase() === "superadmin").length;
+  // Get unique roles for filter dropdown
+  const uniqueRoles = [...new Set(admins.map(admin => admin.roleName).filter(Boolean))];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <Users className="w-6 h-6 text-purple-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Admins</h1>
-        </div>
-        <p className="text-gray-500 ml-11">
-          Manage admin users and their organization assignments
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between">
+    <div className=" bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-sm text-gray-500">Total Admins</p>
-              <p className="text-2xl font-bold text-gray-900">{totalAdmins}</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Administrator Management</h1>
+              <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Manage and view all administrators across organizations</p>
             </div>
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Users className="w-5 h-5 text-purple-600" />
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
             </div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between">
+
+        {/* Organization Selection Card */}
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 border border-gray-200">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div>
-              <p className="text-sm text-gray-500">Active</p>
-              <p className="text-2xl font-bold text-green-600">
-                {activeAdmins}
-              </p>
-            </div>
-            <div className="p-2 bg-green-50 rounded-lg">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Inactive</p>
-              <p className="text-2xl font-bold text-red-600">
-                {inactiveAdmins}
-              </p>
-            </div>
-            <div className="p-2 bg-red-50 rounded-lg">
-              <XCircle className="w-5 h-5 text-red-600" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Super Admins</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {superAdmins}
-              </p>
-            </div>
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Shield className="w-5 h-5 text-purple-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Organization Selection Dropdown */}
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-purple-200 shadow-sm mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-purple-600" />
-            <span className="font-medium text-gray-700">Select Organization:</span>
-          </div>
-          <select
-            value={selectedOrganization}
-            onChange={(e) => setSelectedOrganization(e.target.value)}
-            className="flex-1 max-w-md px-4 py-2.5 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
-          >
-            <option value="all">All Organizations</option>
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </select>
-          {selectedOrganization !== "all" && (
-            <div className="text-sm text-gray-600">
-              Showing admins for: <span className="font-semibold text-purple-700">
-                {organizations.find(o => o.id === selectedOrganization)?.name || "Selected Organization"}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Toolbar */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by name, email, or role..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-
-          {/* Add Button */}
-          <Link
-            to="/create-admin"
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Add Admin
-          </Link>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent"></div>
-            <p className="mt-4 text-gray-500">Loading admins...</p>
-          </div>
-        ) : filteredAdmins.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">
-              No admins found
-            </h3>
-            <p className="text-gray-500 mb-4">
-              {searchQuery || filterStatus !== "all" || selectedOrganization !== "all"
-                ? "Try adjusting your search or filters"
-                : "Get started by creating your first admin"}
-            </p>
-            {!searchQuery && filterStatus === "all" && selectedOrganization === "all" && (
-              <Link
-                to="/create-admin"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Select Organization
+              </label>
+              <select
+                value={selectedOrgId}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                disabled={loadingOrgs}
               >
-                <Plus className="w-4 h-4" />
-                Create Admin
-              </Link>
+                <option value="">Choose an organization...</option>
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+              {loadingOrgs && (
+                <p className="text-sm text-gray-500 mt-1">Loading organizations...</p>
+              )}
+            </div>
+
+            {selectedOrgId && admins.length > 0 && (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Search
+                  </label>
+                  <div className="relative">
+                    <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Search by name or email..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Role
+                    </label>
+                    <select
+                      value={roleFilter}
+                      onChange={(e) => setRoleFilter(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    >
+                      <option value="all">All Roles</option>
+                      {uniqueRoles.map(role => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </>
             )}
           </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Admin
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Organization
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {paginatedAdmins.map((admin) => (
-                    <tr
-                      key={admin.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                            {admin.name?.charAt(0).toUpperCase() || "?"}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {admin.name || "Unnamed"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {admin.email || "No email"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
-                            admin.role
-                          )}`}
-                        >
-                          <Shield className="w-3 h-3" />
-                          {getRoleDisplayName(admin.role)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">
-                            {getOrgName(admin.organizationId)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${admin.status === true
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                            }`}
-                        >
-                          {admin.status === true ? (
-                            <>
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              Active
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="w-3.5 h-3.5" />
-                              Inactive
-                            </>
-                          )}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                            {formatDate(admin.createdAt)}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
-                            <Clock className="w-3 h-3" />
-                            {formatTime(admin.createdAt)}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {/* Status Toggle */}
-                          <button
-                            onClick={() => handleStatusToggle(admin)}
-                            disabled={actionLoading === `status-${admin.id}`}
-                            className={`p-2 rounded-lg transition-colors ${admin.status === true
-                              ? "bg-green-100 text-green-600 hover:bg-green-200"
-                              : "bg-red-100 text-red-600 hover:bg-red-200"
-                              } disabled:opacity-50`}
-                            title={admin.status === true ? "Deactivate" : "Activate"}
-                          >
-                            {actionLoading === `status-${admin.id}` ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : admin.status === true ? (
-                              <CheckCircle2 className="w-4 h-4" />
-                            ) : (
-                              <XCircle className="w-4 h-4" />
-                            )}
-                          </button>
+        </div>
 
-                          {/* Edit Button */}
-                          <button
-                            onClick={() => openEditModal(admin)}
-                            disabled={actionLoading === admin.id}
-                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-50"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => openDeleteModal(admin)}
-                            disabled={actionLoading === admin.id}
-                            className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                <p className="text-sm text-gray-500">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(
-                    currentPage * itemsPerPage,
-                    filteredAdmins.length
-                  )}{" "}
-                  of {filteredAdmins.length} results
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <span className="text-sm text-gray-600">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
+        {/* Main Table Section */}
+        {selectedOrgId && (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+            {/* Table Header with Organization Info */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 sm:px-6 py-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">
+                    {organizations.find(org => org.id === selectedOrgId)?.name}
+                  </h2>
+                  <p className="text-blue-100 text-xs sm:text-sm mt-1">Administrator List</p>
+                </div>
+                <div className="bg-white/20 px-3 sm:px-4 py-2 rounded-lg">
+                  <span className="text-white font-semibold text-sm sm:text-base">{filteredAdmins.length}</span>
+                  <span className="text-blue-100 ml-1 text-xs sm:text-sm">Total Admins</span>
                 </div>
               </div>
+            </div>
+
+            {loading ? (
+              <div className="p-8 sm:p-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <p className="mt-2 text-gray-600 text-sm sm:text-base">Loading administrators...</p>
+              </div>
+            ) : error ? (
+              <div className="p-8 sm:p-12 text-center">
+                <svg className="w-12 h-12 sm:w-16 sm:h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-red-600 mb-3 text-sm sm:text-base">{error}</p>
+                <button
+                  onClick={() => handleChange({ target: { value: selectedOrgId } })}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : filteredAdmins.length === 0 ? (
+              <div className="p-8 sm:p-12 text-center">
+                <svg className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-gray-500 text-base sm:text-lg">No administrators found</p>
+                <p className="text-gray-400 text-sm mt-1">Try adjusting your filters</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Admin</th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredAdmins.map((admin) => (
+                        <tr key={admin.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              {admin.image ? (
+                                <img
+                                  src={admin.image}
+                                  alt={admin.name}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
+                                  <span className="text-white font-semibold">
+                                    {admin.name?.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-medium text-gray-900">{admin.name}</p>
+                                <p className="text-xs text-gray-500">{admin.id.slice(0, 8)}...</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="text-sm text-gray-900">{admin.email}</p>
+                              {admin.phone && (
+                                <p className="text-xs text-gray-500">{admin.phone}</p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeColor(admin.roleName)}`}>
+                              {admin.roleName}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(admin.status)}`}>
+                              {admin.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-900">{formatDate(admin.createdAt)}</p>
+                            <p className="text-xs text-gray-500">Updated: {formatDate(admin.updatedAt)}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2">
+                              <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card Layout */}
+                <div className="lg:hidden p-4 space-y-3">
+                  {filteredAdmins.map((admin) => (
+                    <div key={admin.id} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3">
+                        {admin.image ? (
+                          <img
+                            src={admin.image}
+                            alt={admin.name}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                            <span className="text-white font-semibold text-sm">
+                              {admin.name?.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="font-semibold text-gray-900 truncate text-sm">{admin.name}</h3>
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                              </button>
+                              <button className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRoleBadgeColor(admin.roleName)}`}>
+                              {admin.roleName}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(admin.status)}`}>
+                              {admin.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1 truncate">{admin.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
-          </>
+          </div>
+        )}
+
+        {/* Initial State */}
+        {!selectedOrgId && !loadingOrgs && (
+          <div className="bg-white rounded-xl shadow-lg p-8 sm:p-12 lg:p-16 text-center border border-gray-200">
+            <div className="inline-block p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full mb-6">
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Select an Organization</h3>
+            <p className="text-gray-500 text-sm sm:text-base">Choose an organization from the dropdown to view administrators</p>
+          </div>
         )}
       </div>
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Edit2 className="w-5 h-5 text-blue-600" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">Edit Admin</h2>
-              </div>
-              <button
-                onClick={closeEditModal}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdate} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={editForm.name}
-                  onChange={handleEditChange}
-                  required
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={editForm.email}
-                  onChange={handleEditChange}
-                  required
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
-                    Organization <span className="text-red-500">*</span>
-                  </span>
-                </label>
-                <select
-                  name="organizationId"
-                  value={editForm.organizationId}
-                  onChange={handleEditChange}
-                  required
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Organization</option>
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="flex items-center gap-2">
-                    <Shield className="w-4 h-4" />
-                    Role
-                  </span>
-                </label>
-                <select
-                  name="role"
-                  value={editForm.role}
-                  onChange={handleEditChange}
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="admin">Admin</option>
-                  <option value="superadmin">Super Admin</option>
-                  <option value="manager">Manager</option>
-                  <option value="tenant_admin">Tenant Admin</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="editStatus"
-                  name="status"
-                  checked={editForm.status}
-                  onChange={handleEditChange}
-                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="editStatus" className="text-sm font-medium text-gray-700">
-                  Active Account
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={closeEditModal}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading === editingAdmin?.id}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
-                >
-                  {actionLoading === editingAdmin?.id ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Delete Admin
-              </h2>
-              <p className="text-gray-500 mb-6">
-                Are you sure you want to delete{" "}
-                <span className="font-medium text-gray-700">
-                  {deletingAdmin?.name}
-                </span>
-                ? This action cannot be undone.
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={closeDeleteModal}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={actionLoading === deletingAdmin?.id}
-                  className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
-                >
-                  {actionLoading === deletingAdmin?.id ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

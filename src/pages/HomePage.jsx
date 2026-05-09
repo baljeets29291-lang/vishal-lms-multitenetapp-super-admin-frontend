@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 import { getOrganizations } from '../services/organizationApi';
 import { getUsers } from '../services/userApi';
+import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
+  const { user } = useAuth();
   const [organizations, setOrganizations] = useState([]);
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({
@@ -118,25 +120,7 @@ const HomePage = () => {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-secondary-600 rounded-3xl p-8 text-white shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome back, Vishal! 👋</h1>
-            <p className="text-primary-100">Here's what's happening with your LMS today.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
-              <p className="text-sm text-primary-100">Total Users</p>
-              <p className="text-2xl font-bold">{stats.totalUsers}</p>
-            </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
-              <p className="text-sm text-primary-100">Organizations</p>
-              <p className="text-2xl font-bold">{stats.totalOrganizations}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -178,47 +162,47 @@ const HomePage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Users */}
         <div className="bg-white rounded-2xl border border-gray-200/50 shadow-soft overflow-hidden">
-          <div className="p-6 border-b border-gray-200/50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-secondary-100 rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-secondary-600" />
+          <div className="p-3 sm:p-6 border-b border-gray-200/50 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-secondary-100 rounded-xl flex items-center justify-center">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-secondary-600" />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Recent Users</h2>
-                <p className="text-sm text-gray-500">Latest admin accounts</p>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">Recent Users</h2>
+                <p className="text-xs sm:text-sm text-gray-500">Latest admin accounts</p>
               </div>
             </div>
-            <Link to="/admins" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
-              View all
-              <ArrowUp className="w-4 h-4 rotate-45" />
+            <Link to="/admins" className="text-xs sm:text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+              <span className="hidden sm:inline">View all</span>
+              <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4 rotate-45" />
             </Link>
           </div>
-          <div className="p-6">
-            <div className="space-y-3">
+          <div className="p-3 sm:p-6">
+            <div className="space-y-2 sm:space-y-3">
               {recentUsers.length > 0 ? recentUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-xl flex items-center justify-center">
-                      <span className="text-secondary-600 font-semibold">{user.name?.charAt(0) || 'U'}</span>
+                <div key={user.id} className="flex items-center justify-between p-2 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 sm:w-11 sm:h-11 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-xl flex items-center justify-center">
+                      <span className="text-secondary-600 font-semibold text-sm sm:text-base">{user.name?.charAt(0) || 'U'}</span>
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{user.name}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm sm:font-semibold text-gray-900 truncate">{user.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${user.status === true || user.status === "active" ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-xs font-semibold rounded-full ${user.status === true || user.status === "active" ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                       {user.status === true || user.status === "active" ? 'Active' : 'Inactive'}
                     </span>
-                    <button className="p-2 hover:bg-gray-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                    <button className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      <MoreHorizontal className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
                     </button>
                   </div>
                 </div>
               )) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>No users found</p>
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <Users className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm sm:text-base">No users found</p>
                 </div>
               )}
             </div>
@@ -227,47 +211,47 @@ const HomePage = () => {
 
         {/* Recent Organizations */}
         <div className="bg-white rounded-2xl border border-gray-200/50 shadow-soft overflow-hidden">
-          <div className="p-6 border-b border-gray-200/50 flex items-center justify-between">
+          <div className="p-4 sm:p-6 border-b border-gray-200/50 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-primary-600" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600" />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Recent Organizations</h2>
-                <p className="text-sm text-gray-500">Latest registered orgs</p>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">Recent Organizations</h2>
+                <p className="text-xs sm:text-sm text-gray-500">Latest registered orgs</p>
               </div>
             </div>
-            <Link to="/organizations" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
-              View all
-              <ArrowUp className="w-4 h-4 rotate-45" />
+            <Link to="/organizations" className="text-xs sm:text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+              <span className="hidden sm:inline">View all</span>
+              <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4 rotate-45" />
             </Link>
           </div>
-          <div className="p-6">
-            <div className="space-y-3">
+          <div className="p-3 sm:p-6">
+            <div className="space-y-2 sm:space-y-3">
               {recentOrganizations.length > 0 ? recentOrganizations.map((org) => (
-                <div key={org.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-primary-600" />
+                <div key={org.id} className="flex items-center justify-between p-2 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 sm:w-11 sm:h-11 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center">
+                      <Building2 className="w-3 h-3 sm:w-5 sm:h-5 text-primary-600" />
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{org.name}</p>
-                      <p className="text-sm text-gray-500">{org.code}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm sm:font-semibold text-gray-900 truncate">{org.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">{org.code}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${org.status === true || org.status === "active" ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-xs font-semibold rounded-full ${org.status === true || org.status === "active" ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                       {org.status === true || org.status === "active" ? 'Active' : 'Inactive'}
                     </span>
-                    <button className="p-2 hover:bg-gray-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                    <button className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      <MoreHorizontal className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
                     </button>
                   </div>
                 </div>
               )) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Building2 className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>No organizations found</p>
+                <div className="text-center py-6 sm:py-8 text-gray-500">
+                  <Building2 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm sm:text-base">No organizations found</p>
                 </div>
               )}
             </div>
@@ -276,76 +260,76 @@ const HomePage = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-2xl border border-gray-200/50 shadow-soft p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-accent-100 rounded-xl flex items-center justify-center">
-            <Activity className="w-5 h-5 text-accent-600" />
+      <div className="bg-white rounded-2xl border border-gray-200/50 shadow-soft p-4 sm:p-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-accent-100 rounded-xl flex items-center justify-center">
+            <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-accent-600" />
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
-            <p className="text-sm text-gray-500">Perform common tasks quickly</p>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">Quick Actions</h2>
+            <p className="text-xs sm:text-sm text-gray-500">Perform common tasks quickly</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <Link
             to="/create-org"
-            className="group flex items-center gap-4 p-5 border-2 border-gray-200 rounded-2xl hover:border-primary-500 hover:bg-primary-50 transition-all duration-300"
+            className="group flex flex-col sm:flex-row items-center gap-3 sm:gap-4 p-3 sm:p-5 border-2 border-gray-200 rounded-2xl hover:border-primary-500 hover:bg-primary-50 transition-all duration-300"
           >
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-              <Building2 className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <p className="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">Create Organization</p>
-              <p className="text-sm text-gray-500">Add a new organization</p>
+            <div className="text-center sm:text-left">
+              <p className="text-sm sm:font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">Create Organization</p>
+              <p className="text-xs sm:text-sm text-gray-500">Add a new organization</p>
             </div>
           </Link>
 
           <Link
             to="/create-admin"
-            className="group flex items-center gap-4 p-5 border-2 border-gray-200 rounded-2xl hover:border-green-500 hover:bg-green-50 transition-all duration-300"
+            className="group flex flex-col sm:flex-row items-center gap-3 sm:gap-4 p-3 sm:p-5 border-2 border-gray-200 rounded-2xl hover:border-green-500 hover:bg-green-50 transition-all duration-300"
           >
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-              <UserPlus className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <p className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors">Create Admin</p>
-              <p className="text-sm text-gray-500">Add a new admin user</p>
+            <div className="text-center sm:text-left">
+              <p className="text-sm sm:font-semibold text-gray-900 group-hover:text-green-700 transition-colors">Create Admin</p>
+              <p className="text-xs sm:text-sm text-gray-500">Add a new admin user</p>
             </div>
           </Link>
 
           <Link
             to="/create-role"
-            className="group flex items-center gap-4 p-5 border-2 border-gray-200 rounded-2xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-300"
+            className="group flex flex-col sm:flex-row items-center gap-3 sm:gap-4 p-3 sm:p-5 border-2 border-gray-200 rounded-2xl hover:border-secondary-500 hover:bg-secondary-50 transition-all duration-300"
           >
-            <div className="w-12 h-12 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-              <Shield className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-secondary-500 to-secondary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <p className="font-semibold text-gray-900 group-hover:text-secondary-700 transition-colors">Create Role</p>
-              <p className="text-sm text-gray-500">Define user permissions</p>
+            <div className="text-center sm:text-left">
+              <p className="text-sm sm:font-semibold text-gray-900 group-hover:text-secondary-700 transition-colors">Create Role</p>
+              <p className="text-xs sm:text-sm text-gray-500">Define user permissions</p>
             </div>
           </Link>
         </div>
       </div>
 
       {/* Activity Overview */}
-      <div className="bg-white rounded-2xl border border-gray-200/50 shadow-soft p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+      <div className="bg-white rounded-2xl border border-gray-200/50 shadow-soft p-4 sm:p-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Activity Overview</h2>
-            <p className="text-sm text-gray-500">Track your system activity</p>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">Activity Overview</h2>
+            <p className="text-xs sm:text-sm text-gray-500">Track your system activity</p>
           </div>
         </div>
-        <div className="h-80 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-dashed border-gray-200">
+        <div className="h-60 sm:h-80 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-dashed border-gray-200">
           <div className="text-center">
-            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-soft mx-auto mb-4">
-              <BarChart3 className="w-10 h-10 text-gray-400" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center shadow-soft mx-auto mb-2 sm:mb-4">
+              <BarChart3 className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
             </div>
-            <p className="text-gray-600 font-medium mb-2">Activity Charts Coming Soon</p>
-            <p className="text-sm text-gray-500">We're working on bringing you detailed analytics</p>
+            <p className="text-sm sm:text-base text-gray-600 font-medium mb-1 sm:mb-2">Activity Charts Coming Soon</p>
+            <p className="text-xs sm:text-sm text-gray-500">We're working on bringing you detailed analytics</p>
           </div>
         </div>
       </div>

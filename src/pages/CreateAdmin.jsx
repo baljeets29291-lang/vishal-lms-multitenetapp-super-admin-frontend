@@ -131,179 +131,183 @@ const CreateAdmin = () => {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <button
-          onClick={() => navigate("/admins")}
-          className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Admins
-        </button>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <UserPlus className="w-6 h-6 text-purple-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Admin</h1>
-        </div>
-        <p className="text-gray-500 ml-11">
-          Add a new admin user and assign to an organization
-        </p>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6"
-      >
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Full Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="name"
-            placeholder="Enter admin name"
-            value={form.name}
-            onChange={handleChange}
-            className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.name ? "border-red-500" : "border-gray-300"
-              }`}
-          />
-          {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email Address <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter email address"
-            value={form.email}
-            onChange={handleChange}
-            className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.email ? "border-red-500" : "border-gray-300"
-              }`}
-          />
-          {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
-        </div>
-
-        {/* Password */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter password"
-              value={form.password}
-              onChange={handleChange}
-              className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.password ? "border-red-500" : "border-gray-300"
-                }`}
-            />
-            {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                }`}
-            />
-            {errors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Organization Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <span className="flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              Organization <span className="text-red-500">*</span>
-            </span>
-          </label>
-          <select
-            name="organizationId"
-            value={form.organizationId}
-            onChange={handleChange}
-            disabled={fetchingOrgs}
-            className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.organizationId ? "border-red-500" : "border-gray-300"
-              } ${fetchingOrgs ? "bg-gray-100" : ""}`}
-          >
-            {fetchingOrgs ? (
-              <option>Loading organizations...</option>
-            ) : organizations.length === 0 ? (
-              <option value="">No organizations available</option>
-            ) : (
-              organizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name} ({org.code})
-                </option>
-              ))
-            )}
-          </select>
-         
-          {!fetchingOrgs && organizations.length === 0 && (
-            <p className="mt-2 text-sm text-amber-600">
-              Please create an organization first before adding admins.
-            </p>
-          )}
-        </div>
-
-       
-        {/* Status */}
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="status"
-            name="status"
-            checked={form.status}
-            onChange={handleChange}
-            className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-          />
-          <label htmlFor="status" className="text-sm font-medium text-gray-700">
-            Active Account
-          </label>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-4 pt-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
           <button
-            type="button"
             onClick={() => navigate("/admins")}
-            className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4 transition-colors text-sm sm:text-base"
           >
-            Cancel
+            <ArrowLeft className="w-4 h-4" />
+            Back to Admins
           </button>
-          <button
-            type="submit"
-            disabled={loading || fetchingOrgs || organizations.length === 0}
-            className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              "Create Admin"
-            )}
-          </button>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Admin</h1>
+              <p className="text-gray-500 mt-1 text-sm sm:text-base">
+                Add a new admin user and assign to an organization
+              </p>
+            </div>
+          </div>
         </div>
-      </form>
+
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4 sm:space-y-6"
+        >
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Full Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter admin name"
+              value={form.name}
+              onChange={handleChange}
+              className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.name ? "border-red-500" : "border-gray-300"
+                }`}
+            />
+            {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter email address"
+              value={form.email}
+              onChange={handleChange}
+              className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.email ? "border-red-500" : "border-gray-300"
+                }`}
+            />
+            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+          </div>
+
+          {/* Password */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                value={form.password}
+                onChange={handleChange}
+                className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.password ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                  }`}
+              />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Organization Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <span className="flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                Organization <span className="text-red-500">*</span>
+              </span>
+            </label>
+            <select
+              name="organizationId"
+              value={form.organizationId}
+              onChange={handleChange}
+              disabled={fetchingOrgs}
+              className={`w-full border px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.organizationId ? "border-red-500" : "border-gray-300"
+                } ${fetchingOrgs ? "bg-gray-100" : ""}`}
+            >
+              {fetchingOrgs ? (
+                <option>Loading organizations...</option>
+              ) : organizations.length === 0 ? (
+                <option value="">No organizations available</option>
+              ) : (
+                organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name} ({org.code})
+                  </option>
+                ))
+              )}
+            </select>
+
+            {!fetchingOrgs && organizations.length === 0 && (
+              <p className="mt-2 text-sm text-amber-600">
+                Please create an organization first before adding admins.
+              </p>
+            )}
+          </div>
+
+
+          {/* Status */}
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="status"
+              name="status"
+              checked={form.status}
+              onChange={handleChange}
+              className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            />
+            <label htmlFor="status" className="text-sm font-medium text-gray-700">
+              Active Account
+            </label>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+            <button
+              type="button"
+              onClick={() => navigate("/admins")}
+              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading || fetchingOrgs || organizations.length === 0}
+              className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Admin"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

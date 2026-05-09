@@ -39,15 +39,7 @@ export const AuthProvider = ({ children }) => {
       const userData = response.data.admin;
       setUser(userData);
       
-      // Update localStorage with user data
-      localStorage.setItem('userName', userData.name || '');
-      localStorage.setItem('userEmail', userData.email || '');
-      localStorage.setItem('userPhone', userData.phone || '');
-      localStorage.setItem('userAddress', userData.address || '');
-      localStorage.setItem('userRole', userData.roleName || userData.role || '');
-      localStorage.setItem('userOrganization', userData.organization || '');
-      localStorage.setItem('userJoinDate', userData.createdAt || '');
-      localStorage.setItem('userId', userData.id || '');
+     
       
     } catch (error) {
       console.error('Failed to fetch user data:', error);

@@ -16,9 +16,16 @@ const getAuthHeaders = () => {
 export const getOrganizations = async () => {
   try {
     const response = await axios.get(`${API_URL}/organizations`, getAuthHeaders());
+
     return response.data;
   } catch (error) {
-    toast.error(error.response?.data?.message || "Failed to fetch organizations");
+    console.error("API Error:", error);
+
+    if (error.response?.status === 401) {
+      toast.error("Session expired. Please log in again.");
+    } else {
+      toast.error(error.response?.data?.message || "Failed to fetch organizations");
+    }
     throw error;
   }
 };
