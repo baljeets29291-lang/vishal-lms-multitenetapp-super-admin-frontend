@@ -15,9 +15,11 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react';
+import { Menu, MenuItem, IconButton } from '@mui/material';
 import { getOrganizations } from '../services/organizationApi';
-import { getUsers } from '../services/userApi';
+import { getUsers, deleteUser } from '../services/userApi';
 import { useAuth } from '../context/AuthContext';
+import DeleteModal from '../components/DeleteModal';
 
 const HomePage = () => {
   const { user } = useAuth();
@@ -30,6 +32,11 @@ const HomePage = () => {
     inactiveUsers: 0
   });
   const [loading, setLoading] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null); // New state to store user for deletion
 
   useEffect(() => {
     fetchDashboardData();
@@ -83,6 +90,107 @@ const HomePage = () => {
   const recentUsers = users.slice(0, 5);
   const recentOrganizations = organizations.slice(0, 5);
 
+  const handleMenuClick = (event, user) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+    setSelectedUser(user);
+    console.log('Selected user for menu:', user);
+    console.log('User ID:', user.id);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    // Don't clear selectedUser here, we need it for delete
+    // setSelectedUser(null);
+  };
+
+  const handleDeleteClick = () => {
+    console.log('Delete clicked, selectedUser:', selectedUser);
+    if (!selectedUser) {
+      console.error('No user selected for deletion');
+      return;
+    }
+    console.log('User to delete:', selectedUser.name, 'ID:', selectedUser.id);
+    setUserToDelete(selectedUser); // Store user for deletion
+    handleMenuClose();
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    console.log('Delete confirm called');
+    console.log('userToDelete:', userToDelete);
+    
+    // Use userToDelete instead of selectedUser
+    const userForDeletion = userToDelete;
+    
+    if (!userForDeletion || !userForDeletion.id) {
+      console.error('No user selected for deletion', { userForDeletion });
+      setDeleteModalOpen(false);
+      setUserToDelete(null);
+      return;
+    }
+
+    console.log('Attempting to delete user:', userForDeletion.name, 'with ID:', userForDeletion.id);
+
+    try {
+      setDeleting(true);
+      console.log('Calling deleteUser API with ID:', userForDeletion.id);
+      
+      // Test if deleteUser function exists
+      if (typeof deleteUser !== 'function') {
+        console.error('deleteUser is not a function! Check your import');
+        return;
+      }
+      
+      const result = await deleteUser(userForDeletion.id);
+      console.log('Delete API response:', result);
+      
+      console.log('Delete successful, updating state');
+      
+      // Update users list
+      setUsers(prevUsers => {
+        const newUsers = prevUsers.filter(user => user.id !== userForDeletion.id);
+        console.log('Users before:', prevUsers.length, 'Users after:', newUsers.length);
+        return newUsers;
+      });
+      
+      // Update stats
+      setStats(prev => {
+        const isActive = userForDeletion.status === true || userForDeletion.status === "active";
+        const newStats = {
+          ...prev,
+          totalUsers: prev.totalUsers - 1,
+          activeUsers: isActive ? prev.activeUsers - 1 : prev.activeUsers,
+          inactiveUsers: isActive ? prev.inactiveUsers : prev.inactiveUsers - 1
+        };
+        console.log('Updated stats:', newStats);
+        return newStats;
+      });
+      
+      // Close modal and clear selections
+      setDeleteModalOpen(false);
+      setSelectedUser(null);
+      setUserToDelete(null);
+      setAnchorEl(null);
+      
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      console.error('Error details:', error.message, error.response);
+      // Optionally show an error message to the user
+      alert(`Failed to delete user: ${error.message}`);
+      setDeleteModalOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteModalClose = () => {
+    console.log('Delete modal closed');
+    setDeleteModalOpen(false);
+    setUserToDelete(null);
+    setSelectedUser(null);
+  };
+
   const StatCard = ({ title, value, icon: Icon, color, change, changeType }) => (
     <div className="bg-white rounded-2xl p-6 border border-gray-200/50 hover:shadow-xl transition-all duration-300 group cursor-pointer">
       <div className="flex items-start justify-between">
@@ -119,8 +227,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="space-y-8">
-
+    <div className="scrollbar-thin space-y-8">
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -194,10 +301,38 @@ const HomePage = () => {
                     <span className={`px-2 py-0.5 sm:px-3 sm:py-1 text-xs font-semibold rounded-full ${user.status === true || user.status === "active" ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                       {user.status === true || user.status === "active" ? 'Active' : 'Inactive'}
                     </span>
-                    <button className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                    <IconButton
+                      onClick={(e) => handleMenuClick(e, user)}
+                      className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      size="small"
+                    >
                       <MoreHorizontal className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
-                    </button>
+                    </IconButton>
                   </div>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl) && selectedUser?.id === user.id}
+                    onClose={handleMenuClose}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    PaperProps={{
+                      sx: {
+                        minWidth: '160px',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      }
+                    }}
+                  >
+                    <MenuItem onClick={handleMenuClose}>View Profile</MenuItem>
+                    <MenuItem onClick={handleMenuClose}>Edit</MenuItem>
+                    <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>Delete</MenuItem>
+                  </Menu>
                 </div>
               )) : (
                 <div className="text-center py-6 sm:py-8 text-gray-500">
@@ -333,6 +468,15 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
+      <DeleteModal
+        open={deleteModalOpen}
+        onClose={handleDeleteModalClose}
+        onConfirm={handleDeleteConfirm}
+        title="Delete User"
+        message={`Are you sure you want to delete ${userToDelete?.name || selectedUser?.name || 'this user'}? This action cannot be undone.`}
+        loading={deleting}
+      />
     </div>
   );
 };

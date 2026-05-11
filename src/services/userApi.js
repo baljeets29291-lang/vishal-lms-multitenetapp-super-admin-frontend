@@ -69,11 +69,6 @@ export const getUsers = async (id) => {
     return result;
   } catch (error) {
     console.error("Error in getUsers:", error);
-    if (error.code === 'ERR_NETWORK') {
-      toast.error('Network error. Please check if the API is accessible from your network.');
-    } else {
-      toast.error(error.response?.data?.message || "Failed to fetch users");
-    }
     throw error;
   }
 };
@@ -84,11 +79,6 @@ export const getUserById = async (id) => {
     const response = await axiosInstance.get(`/api/users/${id}`);
     return response.data;
   } catch (error) {
-    if (error.code === 'ERR_NETWORK') {
-      toast.error('Network error. Please check if the API is accessible from your network.');
-    } else {
-      toast.error(error.response?.data?.message || "Failed to fetch user");
-    }
     throw error;
   }
 };
@@ -100,11 +90,7 @@ export const createUser = async (data) => {
     toast.success("Admin created successfully");
     return response.data;
   } catch (error) {
-    if (error.code === 'ERR_NETWORK') {
-      toast.error('Network error. Please check if the API is accessible from your network.');
-    } else {
-      toast.error(error.response?.data?.message || "Failed to create admin");
-    }
+    toast.error(error.response?.data?.message || "Failed to create admin");
     throw error;
   }
 };
@@ -116,11 +102,7 @@ export const updateUser = async (id, data) => {
     toast.success("Admin updated successfully");
     return response.data;
   } catch (error) {
-    if (error.code === 'ERR_NETWORK') {
-      toast.error('Network error. Please check if the API is accessible from your network.');
-    } else {
-      toast.error(error.response?.data?.message || "Failed to update admin");
-    }
+    toast.error(error.response?.data?.message || "Failed to update admin");
     throw error;
   }
 };
@@ -128,14 +110,11 @@ export const updateUser = async (id, data) => {
 // Delete user
 export const deleteUser = async (id) => {
   try {
-    await axiosInstance.delete(`/admin/${id}`);
+    const response = await axiosInstance.delete(`/admin/${id}`);
     toast.success("Admin deleted successfully");
+    return response;
   } catch (error) {
-    if (error.code === 'ERR_NETWORK') {
-      toast.error('Network error. Please check if the API is accessible from your network.');
-    } else {
-      toast.error(error.response?.data?.message || "Failed to delete admin");
-    }
+    toast.error(error.response?.data?.message || "Failed to delete admin");
     throw error;
   }
 };
@@ -150,11 +129,7 @@ export const toggleUserStatus = async (id, currentStatus) => {
     toast.success(`Admin ${!currentStatus ? "activated" : "deactivated"} successfully`);
     return response.data;
   } catch (error) {
-    if (error.code === 'ERR_NETWORK') {
-      toast.error('Network error. Please check if the API is accessible from your network.');
-    } else {
-      toast.error(error.response?.data?.message || "Failed to update status");
-    }
+    toast.error(error.response?.data?.message || "Failed to update status");
     throw error;
   }
 };
@@ -164,11 +139,10 @@ export const handleCreateRole = async (data, subdomain) => {
   try {
     const url = subdomain ? `/roles?subdomain=${subdomain}` : '/roles';
     const res = await axiosInstance.post(url, data);
+    toast.success("Role created successfully");
     return res.data;
   } catch (error) {
-    if (error.code === 'ERR_NETWORK') {
-      toast.error('Network error. Please check if the API is accessible from your network.');
-    }
+    toast.error(error.response?.data?.message || "Failed to create role");
     throw error;
   }
 };
@@ -179,9 +153,6 @@ export const getRoles = async (subdomain) => {
     const res = await axiosInstance.get(url);
     return res.data;
   } catch (error) {
-    if (error.code === 'ERR_NETWORK') {
-      toast.error('Network error. Please check if the API is accessible from your network.');
-    }
     throw error;
   }
 };

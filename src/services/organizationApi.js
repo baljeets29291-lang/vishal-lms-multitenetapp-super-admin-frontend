@@ -20,12 +20,6 @@ export const getOrganizations = async () => {
     return response.data;
   } catch (error) {
     console.error("API Error:", error);
-
-    if (error.response?.status === 401) {
-      toast.error("Session expired. Please log in again.");
-    } else {
-      toast.error(error.response?.data?.message || "Failed to fetch organizations");
-    }
     throw error;
   }
 };
@@ -36,7 +30,6 @@ export const getOrganizationById = async (id) => {
     const response = await axios.get(`${API_URL}/organizations/${id}`, getAuthHeaders());
     return response.data;
   } catch (error) {
-    toast.error(error.response?.data?.message || "Failed to fetch organization");
     throw error;
   }
 };
@@ -119,32 +112,18 @@ export const createSuperAdminForOrganization = async (organizationData, adminDat
       superAdmin: adminResponse
     };
   } catch (error) {
-    console.error('Error creating organization and superadmin:', error);
     toast.error(error.response?.data?.message || 'Failed to create organization and superadmin');
     throw error;
   }
 };
 
 export const handleImportDataBase = async (data) => {
-  console.log("Importing database for:", data);
-  console.log("API URL:", API_URL);
-  console.log("Full endpoint:", `${API_URL}/database/seed-permissions`);
-
   try {
     const res = await axios.post(`${API_URL}/database/seed-permissions`, data, getAuthHeaders());
-
-    console.log("Database import response:", res.data);
-
-    // Show success message
     toast.success("Database permissions imported successfully");
     return res.data;
   } catch (error) {
-    console.error("Error importing database:", error);
-    console.error("Error response:", error.response?.data);
-    console.error("Error status:", error.response?.status);
-
-    const errorMessage = error.response?.data?.message || error.message || "Failed to import database permissions";
-    toast.error(errorMessage);
+    toast.error(error.response?.data?.message || "Failed to import database permissions");
     throw error;
   }
 };

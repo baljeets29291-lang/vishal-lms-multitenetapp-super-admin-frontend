@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import Login from "./auth/Login";
@@ -11,8 +11,19 @@ import ViewOrganization from "./pages/ViewOrganization";
 import CreateAdmin from "./pages/CreateAdmin";
 import ViewAdmins from "./pages/ViewAdmins";
 import CreateRole from "./pages/CreateRole";
+import SplashScreen from "./components/SplashScreen";
 
 const App = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleSplashComplete = () => {
+    setIsLoading(false);
+  };
+
+  if (isLoading) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
+  }
+
   return (
     <Routes>
       {/* Public Route */}
