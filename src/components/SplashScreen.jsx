@@ -33,15 +33,17 @@ const SplashScreen = ({ onComplete, duration = 2000 }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 9999
+        zIndex: 9999,
+        px: 4,
+        overflow: 'hidden'
       }}
     >
-      {/* Animated Background Circles */}
+      {/* Animated Background Circles - Responsive */}
       <Box
         sx={{
           position: 'absolute',
-          width: 300,
-          height: 300,
+          width: { xs: '200px', sm: '250px', md: '300px' },
+          height: { xs: '200px', sm: '250px', md: '300px' },
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, transparent 70%)',
           animation: 'pulse 2s ease-in-out infinite'
@@ -50,8 +52,8 @@ const SplashScreen = ({ onComplete, duration = 2000 }) => {
       <Box
         sx={{
           position: 'absolute',
-          width: 400,
-          height: 400,
+          width: { xs: '280px', sm: '340px', md: '400px' },
+          height: { xs: '280px', sm: '340px', md: '400px' },
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%)',
           animation: 'pulse 3s ease-in-out infinite',
@@ -61,8 +63,8 @@ const SplashScreen = ({ onComplete, duration = 2000 }) => {
       <Box
         sx={{
           position: 'absolute',
-          width: 500,
-          height: 500,
+          width: { xs: '360px', sm: '430px', md: '500px' },
+          height: { xs: '360px', sm: '430px', md: '500px' },
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
           animation: 'pulse 4s ease-in-out infinite',
@@ -70,19 +72,19 @@ const SplashScreen = ({ onComplete, duration = 2000 }) => {
         }}
       />
 
-      {/* Logo Icon */}
+      {/* Logo Icon - Responsive */}
       <Box
         sx={{
           position: 'relative',
-          mb: 4,
+          mb: { xs: 3, sm: 4 },
           animation: 'float 3s ease-in-out infinite'
         }}
       >
         <Box
           sx={{
-            width: 80,
-            height: 80,
-            borderRadius: '20px',
+            width: { xs: 60, sm: 70, md: 80 },
+            height: { xs: 60, sm: 70, md: 80 },
+            borderRadius: { xs: '16px', sm: '18px', md: '20px' },
             background: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #3b82f6 100%)',
             display: 'flex',
             alignItems: 'center',
@@ -90,11 +92,11 @@ const SplashScreen = ({ onComplete, duration = 2000 }) => {
             boxShadow: '0 20px 40px rgba(245, 158, 11, 0.3)'
           }}
         >
-          <BookOpen size={40} color="white" />
+          <BookOpen size={{ xs: 30, sm: 35, md: 40 }} color="white" />
         </Box>
       </Box>
 
-      {/* App Name */}
+      {/* App Name - Responsive Typography */}
       <Typography
         variant="h4"
         sx={{
@@ -102,35 +104,42 @@ const SplashScreen = ({ onComplete, duration = 2000 }) => {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           fontWeight: 700,
+          fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
           mb: 1,
           letterSpacing: '0.5px',
           position: 'relative',
-          animation: 'fadeIn 1s ease-out'
+          animation: 'fadeIn 1s ease-out',
+          textAlign: 'center',
+          lineHeight: 1.2
         }}
       >
-        Organization Management
+        Organization
+        <br />
+        Management
       </Typography>
 
-      {/* Tagline */}
+      {/* Tagline - Responsive */}
       <Typography
         variant="body1"
         sx={{
           color: '#6b7280',
-          mb: 6,
+          fontSize: { xs: '0.875rem', sm: '1rem' },
+          mb: { xs: 4, sm: 6 },
           position: 'relative',
-          animation: 'fadeIn 1s ease-out 0.3s both'
+          animation: 'fadeIn 1s ease-out 0.3s both',
+          textAlign: 'center'
         }}
       >
         Loading your experience...
       </Typography>
 
-      {/* Progress Bar */}
+      {/* Progress Bar - Responsive */}
       <Box
         sx={{
-          width: 280,
-          height: 6,
+          width: { xs: '200px', sm: '240px', md: '280px' },
+          height: { xs: 5, sm: 6 },
           background: 'rgba(0, 0, 0, 0.05)',
-          borderRadius: 3,
+          borderRadius: { xs: 2.5, sm: 3 },
           overflow: 'hidden',
           position: 'relative'
         }}
@@ -140,19 +149,20 @@ const SplashScreen = ({ onComplete, duration = 2000 }) => {
             height: '100%',
             width: `${progress}%`,
             background: 'linear-gradient(90deg, #f59e0b 0%, #ec4899 50%, #3b82f6 100%)',
-            borderRadius: 3,
+            borderRadius: { xs: 2.5, sm: 3 },
             transition: 'width 0.1s linear',
             boxShadow: '0 0 20px rgba(236, 72, 153, 0.4)'
           }}
         />
       </Box>
 
-      {/* Progress Percentage */}
+      {/* Progress Percentage - Responsive */}
       <Typography
         variant="caption"
         sx={{
           color: '#9ca3af',
-          mt: 2,
+          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+          mt: { xs: 1.5, sm: 2 },
           position: 'relative',
           animation: 'fadeIn 1s ease-out 0.5s both'
         }}
