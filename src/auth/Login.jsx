@@ -30,10 +30,12 @@ const Login = () => {
         withCredentials: true,
       });
 
-      // ✅ Save token
-      localStorage.setItem("token", res.data.token);
+      // Fetch user profile after successful login
+      const profileRes = await axios.get(`${BASE_URL}/admin/profile`, {
+        withCredentials: true,
+      });
 
-      // ✅ Redirect (change as needed)
+      // ✅ Redirect to homepage after fetching profile
       window.location.href = "/";
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
