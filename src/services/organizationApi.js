@@ -3,13 +3,12 @@ import { toast } from "react-toastify";
 import { createUser } from "./userApi";
 
 const API_URL = import.meta.env.VITE_BACKEND_API;
-// Remove token-based auth headers - using cookies instead
 const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
   return {
     headers: {
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
-    withCredentials: true,
   };
 };
 

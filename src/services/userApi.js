@@ -6,12 +6,26 @@ const API_URL = import.meta.env.VITE_BACKEND_API;
 // Configure axios instance with CORS settings
 const axiosInstance = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // Enable cookies for authentication
+
+  withCredentials: false, // Set to false to avoid CORS preflight issues
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+// Add request interceptor
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add response interceptor for error handling
 axiosInstance.interceptors.response.use(
@@ -25,13 +39,13 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-// Remove token-based auth headers - using cookies instead
 const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
   return {
     headers: {
+      Authorization: token ? `Bearer ${token}` : undefined,
       "Content-Type": "application/json",
     },
-    withCredentials: true,
   };
 };
 

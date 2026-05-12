@@ -14,28 +14,37 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem('token') || null);
 
   const BASE_URL = import.meta.env.VITE_BACKEND_API;
 
-  // Fetch user data on mount - remove token dependency
+  // Fetch user data on mount if token exists
   useEffect(() => {
-    fetchUserData();
-  }, []);
+    if (token) {
+      fetchUserData();
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
 
   const fetchUserData = async () => {
     try {
-      // Use cookies for authentication - no token needed
+      // You might need to adjust this endpoint based on your API
       const response = await axios.get(`${BASE_URL}/admin/profile`, {
-        withCredentials: true
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-
+      
       const userData = response.data.admin;
       setUser(userData);
-
+      
+     
+      
     } catch (error) {
       console.error('Failed to fetch user data:', error);
-      // If not authenticated, set loading to false
-      setUser(null);
+      // If token is invalid, logout
+      logout();
     } finally {
       setLoading(false);
     }
@@ -47,65 +56,72 @@ export const AuthProvider = ({ children }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        withCredentials: true, // Enable cookies for login
+        withCredentials: true,
       });
 
-      const userData = response.data.admin || response.data;
-
-      // Set user data - no token needed with cookies
+      const { token: newToken, ...userData } = response.data;
+      
+      // Set token
+      setToken(newToken);
+      localStorage.setItem('token', newToken);
+      
+      // Set user data
       setUser(userData);
-
+      
+     
+      
       return { success: true };
     } catch (error) {
       console.error('Login failed:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Login failed'
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Login failed' 
       };
     }
   };
 
-  const logout = async () => {
-    try {
-      // Call logout endpoint to clear server-side cookies
-      await axios.post(`${BASE_URL}/admin/logout`, {}, {
-        withCredentials: true
-      });
-    } catch (error) {
-      console.error('Logout API call failed:', error);
-    }
-
+  const logout = () => {
+    // Clear token
+    setToken(null);
+    localStorage.removeItem('token');
+    
     // Clear user data
     setUser(null);
+    
+   
   };
 
   const updateUserProfile = async (updatedData) => {
     try {
-      const userId = user?.id;
+      const userId = user?.id || localStorage.getItem('userId');
       if (!userId) {
         throw new Error('User ID not found');
       }
 
       const response = await axios.patch(`${BASE_URL}/admin/${userId}`, updatedData, {
-        withCredentials: true
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       // Update user state
       const updatedUser = { ...user, ...updatedData };
       setUser(updatedUser);
-
+     
+      
       return { success: true };
     } catch (error) {
       console.error('Profile update failed:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to update profile'
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update profile' 
       };
     }
   };
 
   const value = {
     user,
+    token,
     loading,
     login,
     logout,
