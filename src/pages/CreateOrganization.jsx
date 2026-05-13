@@ -10,6 +10,11 @@ const CreateOrganization = () => {
     subdomain: "", // optional - replaces 'code'
     db_name: "",   // optional
     db_url: "",    // optional
+    db_host: "",   // optional
+    db_port: "",   // optional
+    db_username: "", // optional
+    db_password: "", // optional
+    db_database: "", // optional
     status: true,
   });
 
@@ -40,8 +45,13 @@ const CreateOrganization = () => {
       if (form.subdomain.trim()) payload.subdomain = form.subdomain;
       if (form.db_name.trim()) payload.db_name = form.db_name;
       if (form.db_url.trim()) payload.db_url = form.db_url;
+      if (form.db_host.trim()) payload.db_host = form.db_host;
+      if (form.db_port.trim()) payload.db_port = Number(form.db_port);
+      if (form.db_username.trim()) payload.db_username = form.db_username;
+      if (form.db_password.trim()) payload.db_password = form.db_password;
+      if (form.db_database.trim()) payload.db_database = form.db_database;
 
-      
+
       // Create organization first
       const orgResponse = await createOrganization(payload);
 
@@ -65,6 +75,11 @@ const CreateOrganization = () => {
         subdomain: "",
         db_name: "",
         db_url: "",
+        db_host: "",
+        db_port: "",
+        db_username: "",
+        db_password: "",
+        db_database: "",
         status: true,
       });
       navigate("/organizations");
@@ -181,6 +196,81 @@ const CreateOrganization = () => {
           <p className="text-xs text-gray-400 mt-1">
             Format: postgresql://username:password@host:port/database
           </p>
+        </div>
+
+        {/* Database Connection Details - Optional */}
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center gap-2">
+            <Database className="w-4 h-4 text-gray-500" />
+            Database Connection Details (Optional)
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Host
+              </label>
+              <input
+                type="text"
+                name="db_host"
+                placeholder="e.g., localhost"
+                value={form.db_host}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Port
+              </label>
+              <input
+                type="text"
+                name="db_port"
+                placeholder="e.g., 5432"
+                value={form.db_port}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                name="db_username"
+                placeholder="e.g., postgres"
+                value={form.db_username}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="db_password"
+                placeholder="••••••••"
+                value={form.db_password}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Database
+              </label>
+              <input
+                type="text"
+                name="db_database"
+                placeholder="e.g., org_acme_db"
+                value={form.db_database}
+                onChange={handleChange}
+                className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Status */}
