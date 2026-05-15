@@ -561,7 +561,6 @@ const ViewOrganization = () => {
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-medium text-gray-900 truncate">{org.name || "Unnamed"}</p>
-                              <p className="text-xs text-gray-500">ID: {org.id?.slice(0, 8) || "N/A"}...</p>
                             </div>
                           </div>
                         </td>
@@ -601,8 +600,8 @@ const ViewOrganization = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-600">
-                            <div>{formatDate(org.created_at)}</div>
-                            <div className="text-xs text-gray-400">{formatTime(org.created_at)}</div>
+                            <div>{formatDate(org.createdAt)}</div>
+                            <div className="text-xs text-gray-400">{formatTime(org.createdAt)}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
