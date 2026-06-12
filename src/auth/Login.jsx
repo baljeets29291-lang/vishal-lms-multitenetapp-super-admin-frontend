@@ -30,10 +30,10 @@ const Login = () => {
         withCredentials: true,
       });
 
-      // ✅ Save token
+      
       localStorage.setItem("token", res.data.token);
 
-      // ✅ Redirect (change as needed)
+  
       window.location.href = "/";
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -102,11 +102,6 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Footer */}
-        <p className="text-sm text-center mt-4">
-          Don't have an account?{" "}
-          <span className="text-blue-500 cursor-pointer">Sign up</span>
-        </p>
       </div>
     </div>
   );
